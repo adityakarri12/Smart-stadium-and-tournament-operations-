@@ -36,3 +36,23 @@ export const rateLimiter = (req: Request, res: Response, next: NextFunction) => 
   clientData.tokens--;
   next();
 };
+
+// Periodically clean up old IP entries to prevent memory leak (DoS vector)
+// Run cleanup every 5 minutes, removing entries that haven't refilled in over 10 minutes
+const CLEANUP_INTERVAL = 5 * 60 * 1000;
+const INACTIVE_TIMEOUT = 10 * 60 * 1000;
+
+const cleanupTimer = setInterval(() => {
+  const now = Date.now();
+  for (const [ip, data] of ipCache.entries()) {
+    if (now - data.lastRefill > INACTIVE_TIMEOUT) {
+      ipCache.delete(ip);
+    }
+  }
+}, CLEANUP_INTERVAL);
+
+// Allow the node process to exit during tests or builds without waiting for the timer
+if (typeof cleanupTimer.unref === 'function') {
+  cleanupTimer.unref();
+}
+

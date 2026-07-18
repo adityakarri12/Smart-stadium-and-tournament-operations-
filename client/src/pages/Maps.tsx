@@ -670,27 +670,31 @@ export const Maps = () => {
                       {t.reportTitle}
                     </p>
                     
-                    <select
-                      value={incType}
-                      onChange={(e) => setIncType(e.target.value)}
-                      className="settings-select"
-                      style={{ width: '100%', padding: '0.4rem', fontSize: '0.85rem', background: 'rgba(0,0,0,0.35)' }}
-                    >
-                      <option value="SPILL">Spill / Clean Request</option>
-                      <option value="MEDICAL">Medical assistance</option>
-                      <option value="SAFETY">Safety / Crowd hazard</option>
-                      <option value="MAINTENANCE">Maintenance issue</option>
-                    </select>
+                     <label htmlFor="map-inc-type" className="sr-only">Incident Type</label>
+                     <select
+                       id="map-inc-type"
+                       value={incType}
+                       onChange={(e) => setIncType(e.target.value)}
+                       className="settings-select"
+                       style={{ width: '100%', padding: '0.4rem', fontSize: '0.85rem', background: 'rgba(0,0,0,0.35)' }}
+                     >
+                       <option value="SPILL">Spill / Clean Request</option>
+                       <option value="MEDICAL">Medical assistance</option>
+                       <option value="SAFETY">Safety / Crowd hazard</option>
+                       <option value="MAINTENANCE">Maintenance issue</option>
+                     </select>
 
-                    <input
-                      type="text"
-                      value={incDesc}
-                      onChange={(e) => setIncDesc(e.target.value)}
-                      placeholder="e.g. Broken seats at row 5"
-                      required
-                      className="settings-input"
-                      style={{ width: '100%', padding: '0.4rem', fontSize: '0.85rem', background: 'rgba(0,0,0,0.35)' }}
-                    />
+                     <label htmlFor="map-inc-desc" className="sr-only">Incident Description</label>
+                     <input
+                       id="map-inc-desc"
+                       type="text"
+                       value={incDesc}
+                       onChange={(e) => setIncDesc(e.target.value)}
+                       placeholder="e.g. Broken seats at row 5"
+                       required
+                       className="settings-input"
+                       style={{ width: '100%', padding: '0.4rem', fontSize: '0.85rem', background: 'rgba(0,0,0,0.35)' }}
+                     />
 
                     <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.25rem' }}>
                       <button 

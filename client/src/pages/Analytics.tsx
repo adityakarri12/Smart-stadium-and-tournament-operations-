@@ -27,6 +27,13 @@ const fetchDashboardData = async (stadiumId: string | null): Promise<{ data: Das
   return res.json();
 };
 
+const fetchAnalyticsDigest = async (stadiumId: string | null, lang: string): Promise<{ success: boolean; data: { digest: string } }> => {
+  if (!stadiumId) throw new Error('No stadium selected');
+  const res = await fetch(`${API_BASE_URL}/api/analytics/digest?stadiumId=${stadiumId}&lang=${lang}`);
+  if (!res.ok) throw new Error('Failed to fetch analytics digest');
+  return res.json();
+};
+
 const translations = {
   en: {
     title: 'Operational Analytics',
@@ -88,11 +95,17 @@ export const Analytics = () => {
     enabled: !!activeStadiumId,
   });
 
+  const { data: digestData } = useQuery({
+    queryKey: ['analyticsDigest', activeStadiumId, userProfile.preferredLanguage],
+    queryFn: () => fetchAnalyticsDigest(activeStadiumId, userProfile.preferredLanguage),
+    refetchInterval: 30000,
+    enabled: !!activeStadiumId,
+  });
+
   const dashboardData = data?.data;
 
   // Process data for charts
   const zones = useMemo(() => dashboardData?.zones || [], [dashboardData]);
-  const incidents = useMemo(() => dashboardData?.incidents || [], [dashboardData]);
   const kpis = useMemo(() => dashboardData?.kpis || { totalSpectators: 0, occupancyPercent: 0, activeIncidents: 0, openFacilities: 0, avgWaitTime: 0 }, [dashboardData]);
 
   // SVG Chart Computations
@@ -136,23 +149,7 @@ export const Analytics = () => {
   }, [zones]);
 
   // 3. GenAI Telemetry Analysis Summary
-  const genAiAnalysis = useMemo(() => {
-    if (zones.length === 0) return 'Analyzing stadium operations...';
-    
-    const slowZone = [...zones].sort((a: any, b: any) => b.waitingTime - a.waitingTime)[0];
-    const highDensityZone = zones.find((z: any) => z.density === 'HIGH' || z.density === 'CRITICAL');
-    
-    let advice = 'Operational telemetry is nominal. Weather conditions ideal, crowd flow behaves as expected.';
-    if (incidents.length > 0) {
-      advice = `Warning: ${incidents.length} active operational incidents require response team allocation. Crowd bottlenecks around ${incidents[0].zone.name} stand.`;
-    } else if (highDensityZone) {
-      advice = `GenAI recommendation: High crowd density detected in ${highDensityZone.name}. Reroute incoming spectator gates to adjacent sections to decrease bottleneck risk.`;
-    } else if (slowZone && slowZone.waitingTime > 15) {
-      advice = `GenAI recommendation: ${slowZone.name} concourse is experiencing ${slowZone.waitingTime}m facility queue delays. Recommend deploying standby staff to food stalls.`;
-    }
-
-    return advice;
-  }, [zones, incidents]);
+  const genAiAnalysis = digestData?.data?.digest || 'Analyzing stadium operations...';
 
   if (isLoading) {
     return (

@@ -87,6 +87,8 @@ async function main() {
           { name: 'Main Restrooms', type: 'RESTROOM', location: `Level 1 - ${zone.name}`, zoneId: zone.id, isOpen: true, waitingTime: Math.floor(Math.random() * 10) },
           { name: 'Burger Stand', type: 'FOOD', location: `Concourse - ${zone.name}`, zoneId: zone.id, isOpen: true, waitingTime: Math.floor(Math.random() * 15) },
           { name: 'Medical Station', type: 'MEDICAL', location: `First Aid - ${zone.name}`, zoneId: zone.id, isOpen: true, waitingTime: 0 },
+          { name: 'Eco-Cup Recycling Hub', type: 'MERCHANDISE', location: `Green Station - ${zone.name}`, zoneId: zone.id, isOpen: true, waitingTime: 2 },
+          { name: 'Solar Phone Charging Hub', type: 'CHARGING', location: `Tech Corner - ${zone.name}`, zoneId: zone.id, isOpen: true, waitingTime: 5 },
         ]
       });
     }
@@ -97,8 +99,10 @@ async function main() {
       data: [
         { title: 'Gates Open', type: 'GATE_OPENING', description: 'Stadium gates open for early access', time: new Date(now.getTime() - 7200000), stadiumId: stadium.id },
         { title: 'Teams Warmup', type: 'KICKOFF', description: 'Teams enter the pitch', time: new Date(now.getTime() - 1800000), stadiumId: stadium.id },
+        { title: 'Green Shuttle Operations', type: 'TRANSPORTATION', description: 'Zero-emission electric buses running to transit hub', time: new Date(now.getTime() - 1000000), stadiumId: stadium.id },
         { title: 'Kickoff', type: 'KICKOFF', description: 'First half begins', time: new Date(now.getTime() + 3600000), stadiumId: stadium.id },
         { title: 'Halftime Show', type: 'HALF_TIME', description: 'Live performance', time: new Date(now.getTime() + 7200000), stadiumId: stadium.id },
+        { title: 'Eco-Cup Reward Program', type: 'TRANSPORTATION', description: 'Return 5 cups for public transport ticket discount', time: new Date(now.getTime() + 10000000), stadiumId: stadium.id },
       ]
     });
   }

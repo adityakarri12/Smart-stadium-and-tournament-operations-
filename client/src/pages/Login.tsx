@@ -267,15 +267,15 @@ export const Login = () => {
 
                   {/* Name */}
                   <div>
-                    <label style={labelStyle}><FiUser style={{ marginRight: '0.3rem' }} />Your Name</label>
-                    <input style={inputStyle} value={name} onChange={e => setName(e.target.value)}
+                    <label htmlFor="profile-name" style={labelStyle}><FiUser style={{ marginRight: '0.3rem' }} />Your Name</label>
+                    <input id="profile-name" style={inputStyle} value={name} onChange={e => setName(e.target.value)}
                       placeholder="e.g. Alex Johnson" required />
                   </div>
 
                   {/* Language */}
                   <div>
-                    <label style={labelStyle}><FiGlobe style={{ marginRight: '0.3rem' }} />Preferred Language</label>
-                    <select style={inputStyle} value={language} onChange={e => setLanguage(e.target.value as any)}>
+                    <label htmlFor="profile-language" style={labelStyle}><FiGlobe style={{ marginRight: '0.3rem' }} />Preferred Language</label>
+                    <select id="profile-language" style={inputStyle} value={language} onChange={e => setLanguage(e.target.value as any)}>
                       <option value="en">🇬🇧 English</option>
                       <option value="es">🇪🇸 Español</option>
                       <option value="fr">🇫🇷 Français</option>
@@ -285,16 +285,16 @@ export const Login = () => {
                   {/* Country → Stadium */}
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                     <div>
-                      <label style={labelStyle}><FiGlobe style={{ marginRight: '0.3rem' }} />Country</label>
-                      <select style={inputStyle} value={selectedCountryId} onChange={e => handleCountryChange(e.target.value)}>
+                      <label htmlFor="profile-country" style={labelStyle}><FiGlobe style={{ marginRight: '0.3rem' }} />Country</label>
+                      <select id="profile-country" style={inputStyle} value={selectedCountryId} onChange={e => handleCountryChange(e.target.value)}>
                         {hierarchy.map((c: any) => (
                           <option key={c.id} value={c.id}>{c.name}</option>
                         ))}
                       </select>
                     </div>
                     <div>
-                      <label style={labelStyle}><FiMapPin style={{ marginRight: '0.3rem' }} />Stadium</label>
-                      <select style={inputStyle} value={selectedStadiumId} onChange={e => setSelectedStadiumId(e.target.value)}>
+                      <label htmlFor="profile-stadium" style={labelStyle}><FiMapPin style={{ marginRight: '0.3rem' }} />Stadium</label>
+                      <select id="profile-stadium" style={inputStyle} value={selectedStadiumId} onChange={e => setSelectedStadiumId(e.target.value)}>
                         {availableStadiums.map((s: any) => (
                           <option key={s.id} value={s.id}>{s.name}</option>
                         ))}
@@ -305,10 +305,10 @@ export const Login = () => {
                   {/* Section → Seat */}
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                     <div>
-                      <label style={labelStyle}><FiMapPin style={{ marginRight: '0.3rem' }} />
+                      <label htmlFor="profile-section" style={labelStyle}><FiMapPin style={{ marginRight: '0.3rem' }} />
                         Stand / Section {isFetchingZones && <span style={{ color: 'var(--accent-blue)', fontSize: '0.7rem' }}>loading…</span>}
                       </label>
-                      <select style={inputStyle} value={selectedZoneName} onChange={e => setSelectedZoneName(e.target.value)} disabled={isFetchingZones || stadiumZones.length === 0}>
+                      <select id="profile-section" style={inputStyle} value={selectedZoneName} onChange={e => setSelectedZoneName(e.target.value)} disabled={isFetchingZones || stadiumZones.length === 0}>
                         {stadiumZones.length === 0
                           ? <option>Loading zones…</option>
                           : stadiumZones.map((z: any) => (
@@ -318,15 +318,15 @@ export const Login = () => {
                       </select>
                     </div>
                     <div>
-                      <label style={labelStyle}>Seat Number</label>
-                      <input style={inputStyle} value={seatNumber} onChange={e => setSeatNumber(e.target.value)}
+                      <label htmlFor="profile-seat" style={labelStyle}>Seat Number</label>
+                      <input id="profile-seat" style={inputStyle} value={seatNumber} onChange={e => setSeatNumber(e.target.value)}
                         placeholder="e.g. A-12 or GA" required />
                     </div>
                   </div>
 
                   {/* Accessibility */}
-                  <div>
-                    <label style={labelStyle}>Accessibility Needs</label>
+                  <div role="group" aria-labelledby="accessibility-label">
+                    <span id="accessibility-label" style={labelStyle}>Accessibility Needs</span>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.6rem' }}>
                       {[
                         { value: 'none', label: '♿ None (Standard)' },
@@ -335,6 +335,7 @@ export const Login = () => {
                       ].map(opt => (
                         <button key={opt.value} type="button"
                           onClick={() => setAccessibility(opt.value as any)}
+                          aria-pressed={accessibility === opt.value}
                           style={{
                             padding: '0.65rem 0.5rem', borderRadius: '0.5rem', fontSize: '0.78rem', cursor: 'pointer',
                             border: accessibility === opt.value ? '1.5px solid var(--accent-blue)' : '1px solid rgba(255,255,255,0.1)',
