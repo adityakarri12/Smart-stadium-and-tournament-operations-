@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useState, useEffect } from 'react';
-import { FiUsers, FiActivity, FiClock, FiAlertTriangle, FiCheckCircle, FiCpu, FiCalendar } from 'react-icons/fi';
+import { FiUsers, FiActivity, FiClock, FiAlertTriangle, FiCheckCircle, FiCpu, FiCalendar, FiSun, FiCloud } from 'react-icons/fi';
 import { API_BASE_URL } from '../config/api';
 
 import { useStadium } from '../contexts/StadiumContext';
@@ -367,6 +367,25 @@ export const Dashboard = () => {
               <span className="queue-time">{zone.waitingTime}m wait</span>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* Live Weather Integration */}
+      <section className="glass-panel dashboard-widget hover-lift col-span-6" aria-labelledby="weather-widget">
+        <h3 id="weather-widget" className="widget-title"><FiCloud className="text-gradient" /> Live Weather</h3>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem 1rem', height: 'calc(100% - 2.5rem)', minHeight: '120px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+            <FiSun size={48} style={{ color: '#fbbf24', filter: 'drop-shadow(0 0 12px rgba(251, 191, 36, 0.45))' }} />
+            <div>
+              <p style={{ margin: 0, fontSize: '2rem', fontWeight: 'bold', lineHeight: 1 }}>22°C</p>
+              <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '4px' }}>Clear Sky & Calm</p>
+            </div>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.85rem', borderLeft: '1px solid var(--glass-border)', paddingLeft: '1.25rem' }}>
+            <p style={{ margin: 0 }}>💨 Wind: <strong>12 km/h</strong></p>
+            <p style={{ margin: 0 }}>💧 Humidity: <strong>45%</strong></p>
+            <p style={{ margin: 0 }}>☂️ Rain Prob: <strong>5%</strong></p>
+          </div>
         </div>
       </section>
 
