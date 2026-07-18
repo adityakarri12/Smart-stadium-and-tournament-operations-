@@ -329,9 +329,9 @@ export const Login = () => {
                     <span id="accessibility-label" style={labelStyle}>Accessibility Needs</span>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.6rem' }}>
                       {[
-                        { value: 'none', label: '♿ None (Standard)' },
-                        { value: 'step-free', label: '🛗 Step-Free' },
-                        { value: 'visual-assistance', label: '👁️ Visual Aid' },
+                        { value: 'none', emoji: '♿', label: 'None (Standard)' },
+                        { value: 'step-free', emoji: '🛗', label: 'Step-Free' },
+                        { value: 'visual-assistance', emoji: '👁️', label: 'Visual Aid' },
                       ].map(opt => (
                         <button key={opt.value} type="button"
                           onClick={() => setAccessibility(opt.value as any)}
@@ -343,7 +343,7 @@ export const Login = () => {
                             color: accessibility === opt.value ? 'var(--accent-blue)' : 'var(--text-muted)',
                             fontWeight: accessibility === opt.value ? 700 : 400, transition: 'all 0.2s',
                           }}>
-                          {opt.label}
+                          <span role="img" aria-hidden="true" style={{ marginRight: '4px' }}>{opt.emoji}</span> {opt.label}
                         </button>
                       ))}
                     </div>

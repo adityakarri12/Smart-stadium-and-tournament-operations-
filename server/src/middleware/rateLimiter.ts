@@ -10,7 +10,7 @@ const REFILL_INTERVAL_MS = 1000; // Refill 1 token per second
 const MAX_TOKENS = 60; // Up to 60 burst requests
 
 export const rateLimiter = (req: Request, res: Response, next: NextFunction) => {
-  const ip = req.ip || req.headers['x-forwarded-for']?.toString() || 'unknown';
+  const ip = req.ip || 'unknown';
   const now = Date.now();
   
   if (!ipCache.has(ip)) {

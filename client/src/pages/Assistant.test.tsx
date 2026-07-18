@@ -15,9 +15,10 @@ beforeAll(() => {
     cancel: vi.fn(),
     speak: vi.fn(),
   } as any;
-  (window as any).SpeechSynthesisUtterance = vi.fn().mockImplementation(() => {
-    return {};
-  });
+  (window as any).SpeechSynthesisUtterance = class {
+    lang = '';
+    text = '';
+  };
 });
 
 describe('Assistant Page Component', () => {

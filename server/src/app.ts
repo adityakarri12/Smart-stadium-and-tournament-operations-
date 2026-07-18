@@ -18,16 +18,21 @@ const allowedOrigins = process.env.CLIENT_ORIGIN
   ? process.env.CLIENT_ORIGIN.split(',').map(o => o.trim())
   : ['http://localhost:5173', 'http://localhost:4173'];
 
+const hasWildcard = allowedOrigins.includes('*');
+
 app.use(cors({
   origin: (origin, callback) => {
     // Allow requests with no origin (mobile apps, curl, server-to-server)
     if (!origin) return callback(null, true);
-    if (allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    if (hasWildcard) {
       return callback(null, true);
     }
     return callback(new Error(`CORS: Origin ${origin} not allowed`));
   },
-  credentials: true
+  credentials: !hasWildcard
 }));
 
 app.use(express.json());
