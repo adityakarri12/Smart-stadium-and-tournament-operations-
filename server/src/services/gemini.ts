@@ -1,6 +1,44 @@
 import { GoogleGenAI } from '@google/genai';
 import { prisma } from '../utils/prisma';
 
+type LanguageCode = 'en' | 'es' | 'fr';
+
+interface UserProfileContext {
+  name?: string;
+  preferredLanguage?: LanguageCode;
+  accessibilityPreference?: 'none' | 'step-free' | 'visual-assistance';
+  ticketSection?: string;
+  seatNumber?: string;
+}
+
+type StadiumRecord = Record<string, unknown>;
+
+const MAX_QUERY_LENGTH = 500;
+const MAX_CONTEXT_ITEMS = 12;
+const MAX_PROMPT_LENGTH = 12_000;
+
+const sanitizeText = (value: string, maxLength: number): string => {
+  const normalized = value
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/[\u0000-\u001F\u007F]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  return normalized.slice(0, maxLength);
+};
+
+const buildLanguageLabel = (language?: LanguageCode): string => {
+  switch (language) {
+    case 'es':
+      return 'Spanish';
+    case 'fr':
+      return 'French';
+    case 'en':
+    default:
+      return 'English';
+  }
+};
+
 // Ensure the API keys are provided
 const apiKeys = [
   process.env.GEMINI_API_KEY_1,
@@ -17,11 +55,12 @@ let currentKeyIndex = 0;
 export const generateStadiumResponse = async (
   query: string,
   stadiumId?: string | null,
-  userProfile?: any
+  userProfile?: UserProfileContext
 ): Promise<string> => {
-  let zones: any[] = [];
-  let events: any[] = [];
-  let incidents: any[] = [];
+  const safeQuery = sanitizeText(query, MAX_QUERY_LENGTH);
+  let zones: StadiumRecord[] = [];
+  let events: StadiumRecord[] = [];
+  let incidents: StadiumRecord[] = [];
   let stadiumName = 'Global Stadium Network';
 
   try {
@@ -57,18 +96,34 @@ export const generateStadiumResponse = async (
       });
     }
   } catch (dbError: any) {
-    console.error('Database query failed in Gemini service:', dbError.message);
+    const message = dbError instanceof Error ? dbError.message : 'unknown error';
+    console.error('Database query failed in Gemini service:', message);
   }
   
   // 2. Build structured prompt with localized preferences
-  const contextStr = JSON.stringify({ zones, events, incidents });
-  const preferredLangName = userProfile?.preferredLanguage === 'es' 
-    ? 'Spanish' 
-    : userProfile?.preferredLanguage === 'fr' 
-      ? 'French' 
-      : 'English';
+  const contextPayload = {
+    currentCountry: stadiumName,
+    currentStadium: stadiumName,
+    currentZone: userProfile?.ticketSection || 'General Concourse',
+    currentMatch: events[0] ?? null,
+    facilities: zones.slice(0, MAX_CONTEXT_ITEMS),
+    accessibility: userProfile?.accessibilityPreference || 'none',
+    crowdStatus: zones.map(zone => ({
+      zoneId: zone.id,
+      name: zone.name,
+      density: zone.density,
+      waitingTime: zone.waitingTime,
+      riskLevel: zone.riskLevel,
+    })).slice(0, MAX_CONTEXT_ITEMS),
+    emergencyStatus: incidents.slice(0, MAX_CONTEXT_ITEMS),
+    transportation: events.slice(0, MAX_CONTEXT_ITEMS),
+    userQuestion: safeQuery,
+  };
 
-  const prompt = `
+  const contextStr = JSON.stringify(contextPayload);
+  const preferredLangName = buildLanguageLabel(userProfile?.preferredLanguage);
+
+  const prompt = sanitizeText(`
 You are the official Smart Stadium Assistant for the FIFA World Cup 2026.
 Your goal is to provide helpful, concise, and accurate responses to spectators.
 You are currently assisting a spectator at the stadium: "${stadiumName}".
@@ -96,7 +151,7 @@ Important Constraints:
 4. If there is an active incident in their seating section or any stand they ask about, you MUST warn them about the hazard (e.g. wet floor, maintenance issue, security delay) and advise alternative routes or behavior.
 5. Proactively recommend eco-friendly or sustainable choices when queried about facilities or transportation (e.g., suggesting waste recycling points, bicycle parking, or electric shuttle buses).
 6. Response Format: Provide a clear, engaging, and professional response using Markdown.
-`;
+`, MAX_PROMPT_LENGTH);
 
   // 3. Retry loop with key rotation
   let attempts = 0;
@@ -116,8 +171,9 @@ Important Constraints:
       });
       
       return response.text || 'I am sorry, I am unable to process your request at this time.';
-    } catch (error: any) {
-      console.error(`Gemini API Error with key index ${keyIndex}:`, error.message);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'unknown error';
+      console.error(`Gemini API Error with key index ${keyIndex}:`, message);
       // Keep looping to try the next key
     }
   }
@@ -165,13 +221,14 @@ export const generateAnalyticsDigest = async (
       }
     });
   } catch (dbError: any) {
-    console.error('Database query failed in Gemini analytics service:', dbError.message);
+    const message = dbError instanceof Error ? dbError.message : 'unknown error';
+    console.error('Database query failed in Gemini analytics service:', message);
   }
 
   const contextStr = JSON.stringify({ zones, events, incidents });
   const preferredLangName = lang === 'es' ? 'Spanish' : lang === 'fr' ? 'French' : 'English';
 
-  const prompt = `
+  const prompt = sanitizeText(`
 You are the Lead Operations Director AI for the FIFA World Cup 2026.
 Your task is to analyze real-time stadium telemetry and output a professional, concise, and actionable Operational Digest.
 This digest is displayed to stadium organizers, volunteers, and security teams in their control room.
@@ -189,7 +246,7 @@ Your digest must include:
 Constraints:
 1. You MUST formulate your entire response in the language: ${preferredLangName}.
 2. Response format: Bullet points using Markdown. Keep it brief, professional, and dense with details. Do not use placeholders.
-`;
+`, MAX_PROMPT_LENGTH);
 
   let attempts = 0;
   while (attempts < apiKeys.length) {
@@ -208,8 +265,9 @@ Constraints:
       });
       
       return response.text || 'Unable to generate operational digest.';
-    } catch (error: any) {
-      console.error(`Gemini API Error with key index ${keyIndex}:`, error.message);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'unknown error';
+      console.error(`Gemini API Error with key index ${keyIndex}:`, message);
     }
   }
 

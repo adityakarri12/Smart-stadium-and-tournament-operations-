@@ -5,29 +5,16 @@ import { Helmet } from 'react-helmet-async';
 import { FiPieChart, FiBarChart2, FiActivity, FiAlertOctagon, FiCpu, FiTrendingUp } from 'react-icons/fi';
 import { useStadium } from '../contexts/StadiumContext';
 import { useAuth } from '../contexts/AuthContext';
+import type { AnalyticsDigestResponse, DashboardApiResponse, StadiumZone } from '../types/stadium';
 
-interface DashboardData {
-  stadiumName: string;
-  zones: any[];
-  events: any[];
-  incidents: any[];
-  kpis: {
-    totalSpectators: number;
-    occupancyPercent: number;
-    activeIncidents: number;
-    openFacilities: number;
-    avgWaitTime: number;
-  };
-}
-
-const fetchDashboardData = async (stadiumId: string | null): Promise<{ data: DashboardData }> => {
+const fetchDashboardData = async (stadiumId: string | null): Promise<DashboardApiResponse> => {
   if (!stadiumId) throw new Error('No stadium selected');
   const res = await fetch(`${API_BASE_URL}/api/dashboard?stadiumId=${stadiumId}`);
   if (!res.ok) throw new Error('Failed to fetch dashboard data');
   return res.json();
 };
 
-const fetchAnalyticsDigest = async (stadiumId: string | null, lang: string): Promise<{ success: boolean; data: { digest: string } }> => {
+const fetchAnalyticsDigest = async (stadiumId: string | null, lang: string): Promise<AnalyticsDigestResponse> => {
   if (!stadiumId) throw new Error('No stadium selected');
   const res = await fetch(`${API_BASE_URL}/api/analytics/digest?stadiumId=${stadiumId}&lang=${lang}`);
   if (!res.ok) throw new Error('Failed to fetch analytics digest');
@@ -112,8 +99,8 @@ export const Analytics = () => {
   // 1. Wait Times (Vertical Bar Chart SVG coordinates)
   const barChartData = useMemo(() => {
     if (zones.length === 0) return [];
-    const maxWait = Math.max(...zones.map((z: any) => z.waitingTime), 15);
-    return zones.map((zone: any, index: number) => {
+    const maxWait = Math.max(...zones.map((zone: StadiumZone) => zone.waitingTime), 15);
+    return zones.map((zone: StadiumZone, index: number) => {
       const height = (zone.waitingTime / maxWait) * 120; // max height 120px
       const x = 60 + index * 70;
       return {
@@ -128,7 +115,7 @@ export const Analytics = () => {
 
   // 2. Stand Distribution (Circle Gauges)
   const standDistributionData = useMemo(() => {
-    return zones.map((zone: any) => {
+    return zones.map((zone: StadiumZone) => {
       let densityPercent = 30;
       if (zone.density === 'MEDIUM') densityPercent = 60;
       if (zone.density === 'HIGH') densityPercent = 85;

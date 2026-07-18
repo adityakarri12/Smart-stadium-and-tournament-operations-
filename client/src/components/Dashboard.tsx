@@ -4,22 +4,9 @@ import { FiUsers, FiActivity, FiClock, FiAlertTriangle, FiCheckCircle, FiCpu, Fi
 import { API_BASE_URL } from '../config/api';
 
 import { useStadium } from '../contexts/StadiumContext';
+import type { DashboardApiResponse, StadiumIncident, StadiumZone } from '../types/stadium';
 
-interface DashboardData {
-  stadiumName: string;
-  zones: any[];
-  events: any[];
-  incidents: any[];
-  kpis: {
-    totalSpectators: number;
-    occupancyPercent: number;
-    activeIncidents: number;
-    openFacilities: number;
-    avgWaitTime: number;
-  };
-}
-
-const fetchDashboardData = async (stadiumId: string | null): Promise<{ data: DashboardData }> => {
+const fetchDashboardData = async (stadiumId: string | null): Promise<DashboardApiResponse> => {
   if (!stadiumId) throw new Error('No stadium selected');
   const res = await fetch(`${API_BASE_URL}/api/dashboard?stadiumId=${stadiumId}`);
   if (!res.ok) throw new Error('Failed to fetch dashboard data');
@@ -86,7 +73,7 @@ export const Dashboard = () => {
       return `Operational Dispatch: Active ${latest.type} hazard in ${latest.zone.name} (${latest.description}). Response teams notified.`;
     }
 
-    const highDensityZone = dashboardData.zones.find((z: any) => z.density === 'CRITICAL' || z.density === 'HIGH');
+    const highDensityZone = dashboardData.zones.find((zone: StadiumZone) => zone.density === 'CRITICAL' || zone.density === 'HIGH');
     if (highDensityZone) {
       return `Crowd density in ${highDensityZone.name} is increasing. Recommend redirecting spectators toward adjacent gates.`;
     }
@@ -272,7 +259,7 @@ export const Dashboard = () => {
               onChange={(e) => setIncZoneId(e.target.value)}
               style={{ padding: '0.5rem', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px', outline: 'none' }}
             >
-              {zones.map((z: any) => (
+              {zones.map((z: StadiumZone) => (
                 <option key={z.id} value={z.id}>{z.name}</option>
               ))}
             </select>
@@ -310,7 +297,7 @@ export const Dashboard = () => {
       <section className="glass-panel dashboard-widget hover-lift col-span-6" aria-labelledby="crowd-heatmap">
         <h3 id="crowd-heatmap" className="widget-title"><FiUsers className="text-gradient" /> Crowd Density Heatmap</h3>
         <div className="heatmap-list">
-          {zones.map((zone: any) => {
+          {zones.map((zone: StadiumZone) => {
             const percent = getDensityPercentage(zone.density);
             return (
               <div key={zone.id} className="heatmap-item">
@@ -339,7 +326,7 @@ export const Dashboard = () => {
       <section className="glass-panel dashboard-widget hover-lift col-span-6" aria-labelledby="match-timeline">
         <h3 id="match-timeline" className="widget-title"><FiCalendar className="text-gradient" /> Operations Timeline</h3>
         <ul className="timeline-list">
-          {events.slice(0, 4).map((event: any) => {
+          {events.slice(0, 4).map((event) => {
             const date = new Date(event.time);
             const isPast = date < new Date();
             return (
@@ -361,7 +348,7 @@ export const Dashboard = () => {
       <section className="glass-panel dashboard-widget hover-lift col-span-6" aria-labelledby="queue-intel">
         <h3 id="queue-intel" className="widget-title"><FiClock className="text-gradient" /> Queue Intelligence</h3>
         <div className="queue-list">
-          {zones.map((zone: any) => (
+          {zones.map((zone: StadiumZone) => (
             <div key={zone.id} className="queue-item">
               <span className="queue-name">{zone.name} Concourse</span>
               <span className="queue-time">{zone.waitingTime}m wait</span>
@@ -395,7 +382,7 @@ export const Dashboard = () => {
         <div className="alerts-list">
           {/* Active Database Reported Incidents */}
           {incidents && incidents.length > 0 && (
-            incidents.map((inc: any) => (
+            incidents.map((inc: StadiumIncident) => (
               <div key={inc.id} className="alert-card critical" style={{ borderLeft: '3px solid var(--danger)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
                   <strong>{inc.type} (ACTIVE)</strong>

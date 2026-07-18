@@ -1,6 +1,13 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
+import {
+  clearStoredSession,
+  readStoredProfile,
+  readStoredSession,
+  writeStoredProfile,
+  writeStoredSession,
+} from '../utils/sessionStorage';
 
 export interface UserProfile {
   name: string;
@@ -27,6 +34,8 @@ const defaultProfile: UserProfile = {
   seatNumber: 'A-12',
 };
 
+const SESSION_TTL_MS = 12 * 60 * 60 * 1000;
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -36,22 +45,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   // Initialize from storage on mount
   useEffect(() => {
-    const token = localStorage.getItem('auth_token');
-    if (token === 'valid_session') {
+    const storedSession = readStoredSession();
+    if (storedSession) {
       setIsAuthenticated(true);
     }
 
-    const savedProfile = localStorage.getItem('user_profile');
-    if (savedProfile) {
-      try {
-        setUserProfile(JSON.parse(savedProfile));
-      } catch (e) {
-        console.error('Failed to parse saved user profile:', e);
-      }
-    }
-    
-    // Simulate initial loading to prevent flashing
-    setTimeout(() => setIsLoading(false), 500);
+    setUserProfile(readStoredProfile(defaultProfile));
+
+    const timer = window.setTimeout(() => setIsLoading(false), 300);
+
+    return () => window.clearTimeout(timer);
   }, []);
 
   const login = async (code: string): Promise<boolean> => {
@@ -60,7 +63,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setTimeout(() => {
         // Simple mock validation: accept any code length >= 4
         if (code.length >= 4) {
-          localStorage.setItem('auth_token', 'valid_session');
+          writeStoredSession('valid_session', SESSION_TTL_MS);
           setIsAuthenticated(true);
           resolve(true);
         } else {
@@ -71,13 +74,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const logout = () => {
-    localStorage.removeItem('auth_token');
+    clearStoredSession();
     setIsAuthenticated(false);
   };
 
   const updateUserProfile = (newProfile: UserProfile) => {
     setUserProfile(newProfile);
-    localStorage.setItem('user_profile', JSON.stringify(newProfile));
+    writeStoredProfile(newProfile);
   };
 
   return (

@@ -4,9 +4,10 @@ import { z } from 'zod';
 import { rateLimiter } from '../middleware/rateLimiter';
 
 const router = Router();
+const MAX_CHAT_MESSAGE_LENGTH = 500;
 
 const chatRequestSchema = z.object({
-  message: z.string().min(1, 'Message is required'),
+  message: z.string().trim().min(1, 'Message is required').max(MAX_CHAT_MESSAGE_LENGTH, 'Message cannot exceed 500 characters'),
   stadiumId: z.string().uuid('Invalid Stadium ID format').nullable().optional(),
   userProfile: z.object({
     name: z.string().default('Guest'),

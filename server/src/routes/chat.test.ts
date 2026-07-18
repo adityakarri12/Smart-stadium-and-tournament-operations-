@@ -38,6 +38,19 @@ describe('Chat Route Integration Tests', () => {
       expect(res.body.success).toBe(false);
     });
 
+    it('returns 400 bad request for oversized messages', async () => {
+      const res = await request(app)
+        .post('/api/chat')
+        .send({
+          message: 'A'.repeat(501),
+          stadiumId: '00000000-0000-0000-0000-000000000000'
+        });
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+      expect(res.body.error).toContain('500 characters');
+    });
+
     it('returns 200 with mocked AI reply for valid inputs', async () => {
       const res = await request(app)
         .post('/api/chat')

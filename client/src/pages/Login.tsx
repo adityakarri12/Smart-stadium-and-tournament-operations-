@@ -8,8 +8,15 @@ import {
   FiLock, FiMail, FiShield, FiArrowRight, FiCheck,
   FiUser, FiGlobe, FiMapPin, FiCpu, FiChevronRight
 } from 'react-icons/fi';
+import type {
+  AccessibilityPreference,
+  CountryNode,
+  LanguageCode,
+  StadiumZone,
+} from '../types/stadium';
 
 type Step = 'auth' | 'profile';
+type LoginLocationState = { from?: { pathname?: string } };
 
 export const Login = () => {
   const { isAuthenticated, login, isLoading, updateUserProfile } = useAuth();
@@ -28,21 +35,21 @@ export const Login = () => {
 
   // ── Step 2: Profile ───────────────────────────────────────────────
   const [name, setName]               = useState('');
-  const [language, setLanguage]       = useState<'en' | 'es' | 'fr'>('en');
-  const [accessibility, setAccessibility] = useState<'none' | 'step-free' | 'visual-assistance'>('none');
+  const [language, setLanguage]       = useState<LanguageCode>('en');
+  const [accessibility, setAccessibility] = useState<AccessibilityPreference>('none');
   const [seatNumber, setSeatNumber]   = useState('');
 
   // Hierarchy fetched from live API
-  const [hierarchy, setHierarchy]             = useState<any[]>([]);
+  const [hierarchy, setHierarchy]             = useState<CountryNode[]>([]);
   const [selectedCountryId, setSelectedCountryId] = useState('');
   const [selectedStadiumId, setSelectedStadiumId] = useState('');
-  const [stadiumZones, setStadiumZones]       = useState<any[]>([]);
+  const [stadiumZones, setStadiumZones]       = useState<StadiumZone[]>([]);
   const [selectedZoneName, setSelectedZoneName] = useState('');
   const [isFetchingHierarchy, setIsFetchingHierarchy] = useState(false);
   const [isFetchingZones, setIsFetchingZones] = useState(false);
   const [isSaving, setIsSaving]               = useState(false);
 
-  const from = (location.state as any)?.from?.pathname || '/dashboard';
+  const from = (location.state as LoginLocationState | null)?.from?.pathname || '/dashboard';
 
   // ── Fetch hierarchy when we move to profile step ──────────────────
   useEffect(() => {
@@ -52,7 +59,7 @@ export const Login = () => {
       try {
         const res  = await fetch(`${API_BASE_URL}/api/hierarchy`);
         const json = await res.json();
-        const data = json.data || [];
+        const data = Array.isArray(json.data) ? (json.data as CountryNode[]) : [];
         setHierarchy(data);
         if (data.length > 0) {
           const firstCountry  = data[0];
@@ -77,7 +84,7 @@ export const Login = () => {
       try {
         const res  = await fetch(`${API_BASE_URL}/api/stadium?stadiumId=${selectedStadiumId}`);
         const json = await res.json();
-        const zones: any[] = json.data?.zones || [];
+        const zones = Array.isArray(json.data?.zones) ? (json.data.zones as StadiumZone[]) : [];
         setStadiumZones(zones);
         if (zones.length > 0) setSelectedZoneName(zones[0].name);
       } catch {
@@ -96,12 +103,12 @@ export const Login = () => {
   if (isAuthenticated && step === 'auth') return <Navigate to={from} replace />;
 
   // ── Derived lists ─────────────────────────────────────────────────
-  const selectedCountry   = hierarchy.find((c: any) => c.id === selectedCountryId);
-  const availableStadiums = selectedCountry?.cities?.flatMap((city: any) => city.stadiums) ?? [];
+  const selectedCountry   = hierarchy.find((country) => country.id === selectedCountryId);
+  const availableStadiums = selectedCountry?.cities?.flatMap((city) => city.stadiums) ?? [];
 
   const handleCountryChange = (id: string) => {
     setSelectedCountryId(id);
-    const country = hierarchy.find((c: any) => c.id === id);
+    const country = hierarchy.find((item) => item.id === id);
     const first   = country?.cities?.[0]?.stadiums?.[0];
     setSelectedStadiumId(first?.id ?? '');
     setStadiumZones([]);
@@ -275,7 +282,7 @@ export const Login = () => {
                   {/* Language */}
                   <div>
                     <label htmlFor="profile-language" style={labelStyle}><FiGlobe style={{ marginRight: '0.3rem' }} />Preferred Language</label>
-                    <select id="profile-language" style={inputStyle} value={language} onChange={e => setLanguage(e.target.value as any)}>
+                    <select id="profile-language" style={inputStyle} value={language} onChange={e => setLanguage(e.target.value as LanguageCode)}>
                       <option value="en">🇬🇧 English</option>
                       <option value="es">🇪🇸 Español</option>
                       <option value="fr">🇫🇷 Français</option>
@@ -287,7 +294,7 @@ export const Login = () => {
                     <div>
                       <label htmlFor="profile-country" style={labelStyle}><FiGlobe style={{ marginRight: '0.3rem' }} />Country</label>
                       <select id="profile-country" style={inputStyle} value={selectedCountryId} onChange={e => handleCountryChange(e.target.value)}>
-                        {hierarchy.map((c: any) => (
+                        {hierarchy.map((c) => (
                           <option key={c.id} value={c.id}>{c.name}</option>
                         ))}
                       </select>
@@ -295,7 +302,7 @@ export const Login = () => {
                     <div>
                       <label htmlFor="profile-stadium" style={labelStyle}><FiMapPin style={{ marginRight: '0.3rem' }} />Stadium</label>
                       <select id="profile-stadium" style={inputStyle} value={selectedStadiumId} onChange={e => setSelectedStadiumId(e.target.value)}>
-                        {availableStadiums.map((s: any) => (
+                        {availableStadiums.map((s) => (
                           <option key={s.id} value={s.id}>{s.name}</option>
                         ))}
                       </select>
@@ -311,7 +318,7 @@ export const Login = () => {
                       <select id="profile-section" style={inputStyle} value={selectedZoneName} onChange={e => setSelectedZoneName(e.target.value)} disabled={isFetchingZones || stadiumZones.length === 0}>
                         {stadiumZones.length === 0
                           ? <option>Loading zones…</option>
-                          : stadiumZones.map((z: any) => (
+                          : stadiumZones.map((z) => (
                             <option key={z.id} value={z.name}>{z.name}</option>
                           ))
                         }
@@ -334,7 +341,7 @@ export const Login = () => {
                         { value: 'visual-assistance', emoji: '👁️', label: 'Visual Aid' },
                       ].map(opt => (
                         <button key={opt.value} type="button"
-                          onClick={() => setAccessibility(opt.value as any)}
+                          onClick={() => setAccessibility(opt.value as AccessibilityPreference)}
                           aria-pressed={accessibility === opt.value}
                           style={{
                             padding: '0.65rem 0.5rem', borderRadius: '0.5rem', fontSize: '0.78rem', cursor: 'pointer',
@@ -354,7 +361,7 @@ export const Login = () => {
                     <div style={{ padding: '0.85rem 1rem', borderRadius: '0.6rem', background: 'rgba(0,240,255,0.06)', border: '1px solid rgba(0,240,255,0.2)', fontSize: '0.82rem', color: 'var(--accent-blue)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                       <FiCpu size={14} />
                       <span>
-                        <strong>Active Stadium:</strong> {availableStadiums.find((s: any) => s.id === selectedStadiumId)?.name} — {selectedZoneName || 'General Concourse'}, Seat {seatNumber || 'GA'}
+                        <strong>Active Stadium:</strong> {availableStadiums.find((stadium) => stadium.id === selectedStadiumId)?.name} — {selectedZoneName || 'General Concourse'}, Seat {seatNumber || 'GA'}
                       </span>
                     </div>
                   )}

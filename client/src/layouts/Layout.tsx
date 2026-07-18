@@ -6,6 +6,7 @@ import { useStadium } from '../contexts/StadiumContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useEffect, useState, useMemo } from 'react';
 import { Dropdown } from '../components/Dropdown';
+import type { AccessibilityPreference, CountryNode, LanguageCode, StadiumNode } from '../types/stadium';
 
 const fetchHierarchy = async () => {
   const res = await fetch(`${API_BASE_URL}/api/hierarchy`);
@@ -142,11 +143,11 @@ export const Layout = () => {
     };
   }, [isSettingsOpen]);
 
-  const selectedCountry = countries.find((c: any) => c.id === selectedCountryId);
-  const availableStadiums = selectedCountry?.cities.flatMap((city: any) => city.stadiums) || [];
+  const selectedCountry = countries.find((country: CountryNode) => country.id === selectedCountryId);
+  const availableStadiums: StadiumNode[] = selectedCountry?.cities.flatMap((city: CountryNode['cities'][number]) => city.stadiums) || [];
 
-  const countryOptions = countries.map((c: any) => ({ id: c.id, label: c.name }));
-  const stadiumOptions = availableStadiums.map((s: any) => ({ id: s.id, label: s.name }));
+  const countryOptions = countries.map((country: CountryNode) => ({ id: country.id, label: country.name }));
+  const stadiumOptions = availableStadiums.map((stadium: StadiumNode) => ({ id: stadium.id, label: stadium.name }));
 
   const handleLogout = () => {
     logout();
@@ -191,7 +192,7 @@ export const Layout = () => {
               placeholder={t.selectCountry}
               onChange={(id) => {
                 setSelectedCountryId(id);
-                const newCountry = countries.find((c: any) => c.id === id);
+                const newCountry = countries.find((country: CountryNode) => country.id === id);
                 const firstStadium = newCountry?.cities[0]?.stadiums[0];
                 if (firstStadium) setActiveStadiumId(firstStadium.id);
               }}
@@ -306,7 +307,7 @@ export const Layout = () => {
                   id="pref-lang" 
                   className="settings-select"
                   value={tempLanguage} 
-                  onChange={(e) => setTempLanguage(e.target.value as any)}
+                  onChange={(e) => setTempLanguage(e.target.value as LanguageCode)}
                 >
                   <option value="en">English</option>
                   <option value="es">Español</option>
@@ -320,7 +321,7 @@ export const Layout = () => {
                   id="pref-access" 
                   className="settings-select"
                   value={tempAccessibility} 
-                  onChange={(e) => setTempAccessibility(e.target.value as any)}
+                  onChange={(e) => setTempAccessibility(e.target.value as AccessibilityPreference)}
                 >
                   <option value="none">{t.none}</option>
                   <option value="step-free">{t.stepFree}</option>
