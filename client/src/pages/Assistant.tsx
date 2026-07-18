@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { API_BASE_URL } from '../config/api';
 import { FiSend, FiCpu, FiUser, FiVolume2, FiMic, FiMicOff } from 'react-icons/fi';
 import { useStadium } from '../contexts/StadiumContext';
