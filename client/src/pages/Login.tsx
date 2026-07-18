@@ -89,9 +89,11 @@ export const Login = () => {
     load();
   }, [selectedStadiumId]);
 
-  // ── Guards ────────────────────────────────────────────────────────
+  // Guards
   if (isLoading) return null;
-  if (isAuthenticated) return <Navigate to={from} replace />;
+  // Only auto-redirect if the user was ALREADY logged in before visiting this page.
+  // If they just authenticated (step === 'profile'), let them complete the wizard first.
+  if (isAuthenticated && step === 'auth') return <Navigate to={from} replace />;
 
   // ── Derived lists ─────────────────────────────────────────────────
   const selectedCountry   = hierarchy.find((c: any) => c.id === selectedCountryId);
